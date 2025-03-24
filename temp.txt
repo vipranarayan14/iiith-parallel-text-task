@@ -1,0 +1,55 @@
+async def process_translations(input_data, batch_size=100):
+    bulk_translation_sep = "🔽🔽"
+    output_data = []
+    total_batches = (len(input_data) + batch_size - 1) // batch_size  # Calculate total batch count
+    print(f"\n🚀 Starting translation in {total_batches} batches...")
+
+    # Process in batches
+    for batch_idx, batch_start in enumerate(range(0, len(input_data), batch_size), start=1):
+        batch = input_data[batch_start : batch_start + batch_size]
+        print(f"\n📦 Processing batch {batch_idx}/{total_batches} ({len(batch)} items)...")
+
+        # Merge batch text entries using separator
+        merged_text = bulk_translation_sep.join(item[2] for item in batch)
+
+        # print(merged_text)
+        
+        # Perform API call for translation
+        translated_text = get_translation(merged_text)  # Sync call
+        # translated_text = merged_text
+
+        # Split translations back into individual entries
+        translated_entries = translated_text.split("\\")
+
+        print(translated_entries)
+
+        for i, (item, en_dmt) in enumerate(zip(batch, translated_entries), start=batch_start + 1):
+            refno, type, text = item
+            print(f"🔄 Retrieving translation {i}/{len(input_data)}...")
+
+            # ta_gmt = await translate_to_tamil(en_dmt)  # Await async call
+            ta_gmt = ""
+
+            output_data.append([i, refno, text, en_dmt, ta_gmt])
+
+    print("\n✅ Translation complete!")
+    return output_data
+
+---
+
+async def process_translations(input_data):
+    output_data = []
+    print("\n🚀 Starting translation...")
+
+    for i, item in enumerate(tqdm(input_data, desc="Translating", unit="line")):
+        refno, type, text = item
+        print(f"🔄 Translating entry {i+1}/{len(input_data)}...")
+        
+        en_dmt = get_translation(text)  # Sync call
+        # ta_gmt = await translate_to_tamil(en_dmt)  # Await async call
+        ta_gmt = ""
+        
+        output_data.append([i+1, refno, text, en_dmt, ta_gmt])
+
+    print("\n✅ Translation complete!")
+    return output_data
